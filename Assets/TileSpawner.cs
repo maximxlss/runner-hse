@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SaintsField;
 using SaintsField.Playa;
 using UnityEngine;
@@ -8,30 +9,56 @@ using Random = UnityEngine.Random;
 /// Spawns random tiles aligned to their size defined in the <see cref="TileManager"/> component.
 /// </summary>
 public class TileSpawner : MonoBehaviour {
-    [Required]
-    public TileManager[] tiles;
+    [Serializable]
+    public struct TileOption {
+        [Required]
+        public TileManager TileManager;
+
+        [Min(0)]
+        public int Weight;
+    }
+
+    public TileOption[] tiles;
+
+    [ShowInInspector]
+    public int TotalWeight => tiles.Sum(t => t.Weight);
 
     public float prespawnDistance = 150f;
 
     private Transform _lastSpawned;
     private TileManager _planToSpawn;
 
+    // ReSharper disable Unity.PerformanceAnalysis
+    // this is not actually frequently called and the "costly" debug should be unreachable.
+    private void PickNextToSpawn() {
+        var target = Random.Range(0, TotalWeight);
+        foreach (var tile in tiles) {
+            target -= tile.Weight;
+            if (target < 0) {
+                _planToSpawn = tile.TileManager;
+                return;
+            }
+        }
+
+        Debug.LogError("pickNextToSpawn didn't finish (invalid tiles or bug)");
+    }
+
     public void Start() {
         var offset = 0f;
         // it's backwards so we keep a flag
         var setLastSpawned = true;
         while (offset > -prespawnDistance) {
-            var prefab = tiles[Random.Range(0, tiles.Length)];
+            PickNextToSpawn();
             var newTile =
-                GameManager.Instance.environmentManager.SpawnChild(prefab.gameObject, new Vector3(offset, 0, 0));
-            offset -= prefab.xSize;
+                GameManager.Instance.environmentManager.SpawnChild(_planToSpawn.gameObject, new Vector3(offset, 0, 0));
+            offset -= _planToSpawn.xSize;
             if (setLastSpawned) {
                 _lastSpawned = newTile.transform;
                 setLastSpawned = false;
             }
         }
 
-        _planToSpawn = tiles[Random.Range(0, tiles.Length)];
+        PickNextToSpawn();
     }
 
     public void Update() {
@@ -48,6 +75,6 @@ public class TileSpawner : MonoBehaviour {
         var newTile =
             GameManager.Instance.environmentManager.SpawnChild(_planToSpawn.gameObject, new Vector3(offset, 0, 0));
         _lastSpawned = newTile.transform;
-        _planToSpawn = tiles[Random.Range(0, tiles.Length)];
+        PickNextToSpawn();
     }
 }

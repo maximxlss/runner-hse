@@ -10,9 +10,7 @@ public class EnvironmentManager : MonoBehaviour {
     public float spawnX = 100;
     public float despawnX = -10;
 
-    public bool StopMoving => !GameManager.Instance.isPlaying;
-
-    public float Distance { get; private set; }
+    public bool StopMoving => !GameManager.Instance.shouldMove;
 
     public void FixedUpdate() {
         if (StopMoving) {
@@ -25,7 +23,7 @@ public class EnvironmentManager : MonoBehaviour {
             o.localPosition += deltaDistance * new Vector3(-1, 0, 0);
         }
 
-        Distance += deltaDistance;
+        GameManager.Instance.Score += deltaDistance;
     }
 
     public void Update() {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using SaintsField;
 using SaintsField.Playa;
@@ -26,9 +27,14 @@ public class GameManager : MonoBehaviour {
     [Required]
     public EnvironmentManager environmentManager;
 
+    [Required]
+    public GameObject menu;
+
     public GameObject startText;
 
     public bool isPlaying;
+    public bool isDead;
+    public bool shouldMove => isPlaying && !isDead;
 
     public float CurrentSpeed => baseSpeed + boostSpeed;
 
@@ -43,6 +49,8 @@ public class GameManager : MonoBehaviour {
 
     public bool restartOnDeath = true;
 
+    public float Score;
+
     public void Start() {
         if (startText && isPlaying) {
             startText.SetActive(false);
@@ -50,6 +58,12 @@ public class GameManager : MonoBehaviour {
         else {
             InputSystem.onAnyButtonPress.CallOnce(StartPlaying);
         }
+
+        InputSystem.actions["Player/Pause"].started += TogglePauseCallback;
+    }
+
+    public void OnDestroy() {
+        InputSystem.actions["Player/Pause"].started -= TogglePauseCallback;
     }
 
     public void StartPlaying(InputControl inputControl) {
@@ -60,8 +74,35 @@ public class GameManager : MonoBehaviour {
         isPlaying = true;
     }
 
+    public void TogglePauseCallback(InputAction.CallbackContext ctx) {
+        TogglePause();
+    }
+
+    public void TogglePause() {
+        if (isPlaying) {
+            Pause();
+        }
+        else {
+            Continue();
+        }
+    }
+
+    public void Pause() {
+        isPlaying = false;
+        menu.SetActive(true);
+    }
+
+    public void Continue() {
+        isPlaying = true;
+        menu.SetActive(false);
+    }
+
+    public void ReturnToMenu() {
+        SceneManager.LoadScene("Scenes/MainMenu");
+    }
+
     private void FixedUpdate() {
-        if (!isPlaying) {
+        if (!shouldMove) {
             return;
         }
 
@@ -69,14 +110,16 @@ public class GameManager : MonoBehaviour {
     }
 
     public void OnDeath() {
-        isPlaying = false;
+        isDead = true;
+        PlayerPrefs.SetFloat("highscore", Mathf.Max(PlayerPrefs.GetFloat("highscore"), Score));
+        PlayerPrefs.Save();
         if (restartOnDeath) {
             StartCoroutine(RestartAfterSomeTime());
         }
     }
 
     private static IEnumerator RestartAfterSomeTime() {
-        yield return new WaitForSeconds(3);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        yield return new WaitForSeconds(1.5f);
+        SceneManager.LoadScene("Scenes/MainMenu");
     }
 }

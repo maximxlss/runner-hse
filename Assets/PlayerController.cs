@@ -17,19 +17,23 @@ public class PlayerController : MonoBehaviour {
     public float switchSpeed = 0.1f;
 
     public float maxBoost = 25;
+    public int shields;
 
     public void Start() {
         InputSystem.actions["Player/Move"].started += OnMove;
     }
 
-    // TODO: fix this not firing when you start pressing left or right when boosting (so you can't move while boosting)
+    public void OnDestroy() {
+        InputSystem.actions["Player/Move"].started -= OnMove;
+    }
+
     public void OnMove(InputAction.CallbackContext ctx) {
-        if (!GameManager.Instance.isPlaying) {
+        if (!GameManager.Instance.shouldMove) {
             return;
         }
 
-        var pos = ctx.ReadValue<Vector2>();
-        switch (pos.x) {
+        var pos = ctx.ReadValue<float>();
+        switch (pos) {
             case > 0 when currentLane < sideLanes:
                 currentLane++;
                 break;
@@ -44,8 +48,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void Update() {
-        var pos = InputSystem.actions["Player/Move"].ReadValue<Vector2>();
-        if (pos.y > 0.5 && GameManager.Instance.boostSpeed < maxBoost) {
+        if (InputSystem.actions["Player/Sprint"].IsPressed() && GameManager.Instance.boostSpeed < maxBoost) {
             GameManager.Instance.boostSpeed += 20f * Time.deltaTime;
         }
         else if (GameManager.Instance.boostSpeed > 0) {
@@ -61,11 +64,9 @@ public class PlayerController : MonoBehaviour {
         transform.localPosition += neededDisp * switchSpeed;
     }
 
-    public void CheckHealth() {
-        if (health >= maxHealth) {
-            health = maxHealth;
-            return;
-        }
+    public void Check() {
+        health = Math.Clamp(health, 0, maxHealth);
+        shields = Math.Max(shields, 0);
 
         if (health > 0) {
             return;

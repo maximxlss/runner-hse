@@ -126,6 +126,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Obstacle
   deltaHealth: -999
+  deltaShields: 0
+  deltaScore: 0
+  shieldsToBypass: 1
+  destroyOnHit: 0
 --- !u!1 &7814065858075560802
 GameObject:
   m_ObjectHideFlags: 0
@@ -300,3 +304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Obstacle
   deltaHealth: -999
+  deltaShields: 0
+  deltaScore: 0
+  shieldsToBypass: 1
+  destroyOnHit: 0

@@ -7,7 +7,8 @@ public class ScoreHudController : MonoBehaviour {
     public TextMeshProUGUI textMesh;
 
     private void Update() {
-        var dist = GameManager.Instance.environmentManager.Distance;
-        textMesh.text = $"Score: {dist:F1} units";
+        var dist = GameManager.Instance.Score;
+        var shields = GameManager.Instance.playerController.shields;
+        textMesh.text = $"Score: {dist:F1} units\nShields: {shields}";
     }
 }

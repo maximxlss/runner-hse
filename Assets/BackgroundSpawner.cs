@@ -48,7 +48,7 @@ public class BackgroundSpawner : MonoBehaviour {
     }
 
     public void Update() {
-        if (!GameManager.Instance.isPlaying) {
+        if (!GameManager.Instance.shouldMove) {
             return;
         }
 
